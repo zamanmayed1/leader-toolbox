@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leader ToolBox</title>
+    <link rel="shortcut icon" href="./logo.jpg" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800&display=swap');
+
+    * {
+        font-family: "Poppins", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+    }
+
+    /* Ensuring descriptions are of equal height */
+    .description {
+        min-height: 56px;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-image: url('https://images.template.net/353862/Aesthetic-Grid-Pattern-Background-edit-online.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+
+</style>
+
+<body>
+
+    <div class="max-w-7xl mx-auto p-4">
+        <!-- Header with logo and search bar -->
+        <div
+            class="sticky top-2 z-10 mb-8 border-blue-500 py-4 px-4 rounded-md border flex justify-between items-center bg-white">
+            <a href="/">
+                <div class="flex gap-3 items-center">
+                    <img src="./logo.jpg" class="w-8 h-8" alt="Leader ToolBox Logo">
+                    <h1 class="text-2xl font-bold">Leader ToolBox</h1>
+                </div>
+            </a>
+            <div class="relative w-full max-w-sm">
+                <input id="search" autocomplete="off" type="text" placeholder="Search for tools..."
+                    class="w-full border rounded-lg py-2 px-4 pl-10 " onkeyup="filterTools()" />
+                <span class="absolute left-3 top-2.5 text-gray-400">
+                    <img class="w-6 h-6" src="./search.png" alt="Search Icon">
+                </span>
+            </div>
+        </div>
+
+        <!-- Grid for the cards -->
+        <div id="toolGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Cards will be injected here dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // Example JSON data for tools
+        const tools = [
+            {
+                "name": "Merge CSV",
+                "description": "Merge multiple CSV files into one consolidated file with ease.",
+                "link": "/merg-csv.html"
+            },
+            {
+                "name": "Filter CSV",
+                "description": "Filter your CSV files based on specific categories or criteria.",
+                "link": "/filter-csv-by-category.html"
+            }
+        ];
+
+        // Function to display tools
+        function displayTools(toolList) {
+            const toolGrid = document.getElementById('toolGrid');
+            toolGrid.innerHTML = ''; // Clear the current grid
+
+            toolList.forEach(tool => {
+                const toolCard = `
+                <a href="${tool.link}" class="block bg-white border border-blue-300 p-4 rounded-lg  hover:shadow-md">
+                    <h2 class="text-xl  font-semibold mb-4">${tool.name}</h2>
+                    <p class="description text-gray-700 mb-4">${tool.description}</p>
+                    <button class="mt-auto text-blue-700 font-semibold border-blue-500 border rounded-lg py-2 px-4">Use Now</button>
+                </a>`;
+                toolGrid.innerHTML += toolCard; // Add each card to the grid
+            });
+        }
+
+        // Function to filter tools by search input
+        function filterTools() {
+            const searchQuery = document.getElementById('search').value.toLowerCase();
+            const filteredTools = tools.filter(tool => tool.name.toLowerCase().includes(searchQuery));
+            displayTools(filteredTools); // Display filtered tools
+        }
+
+        // Initial display of all tools
+        displayTools(tools);
+    </script>
+
+</body>
+
+</html>

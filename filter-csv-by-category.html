@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Filter Master</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for better typography -->
+    <link
+        href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvyhQXKBzNrvrD5OAdXZkQ54bCq40DdY32aBPYAMFnX3JiifeU5scRtit8t6Lmgty-TnI&usqp=CAU"
+        rel="shortcut icon">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+</head>
+<style>
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-image: url('https://images.template.net/353862/Aesthetic-Grid-Pattern-Background-edit-online.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+
+    }
+</style>
+
+<body class="flex items-center justify-center">
+    <div class=" border-blue-500 p-3 rounded-md border flex justify-between items-center bg-white">
+        <a href="/">
+            <div class="flex gap-3 items-center">
+                <img src="./home.png" class="w-10 h-10 hover:scale-125 duration-300" alt="Leader ToolBox Logo">
+            </div>
+        </a>
+    </div>
+    <!-- Main container -->
+    <div class="bg-white p-8 border m-2 max-w-2xl w-full relative shadow-lg-transform">
+
+
+        <!-- Title -->
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-left">CSV Filter Master</h1>
+
+        <!-- Category Input -->
+        <div class="mb-6">
+            <label for="categoryInput" class="block text-sm font-medium text-gray-700 mb-2">Enter Categories
+                (comma-separated)</label>
+            <textarea id="categoryInput" rows="4"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder='Accounting firm, Accounting school, IT consultancy...' required></textarea>
+        </div>
+
+        <!-- File Input -->
+        <div class="mb-6">
+            <label for="csvFile" class="block text-sm font-medium text-gray-700 mb-2">Upload CSV File</label>
+            <input id="csvFile" type="file" accept=".csv"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <!-- Filter Button -->
+        <div class="text-center">
+            <button id="filterBtn"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md font-bold transition w-full">
+                Filter CSV
+            </button>
+        </div>
+
+        <!-- Download Button (hidden initially) -->
+        <div class="text-center mt-4 ">
+            <a id="downloadLink" href="#" download="filtered_output.csv"
+                class="mt-4 inline-block bg-green-600 text-white px-6 py-3 rounded-md font-bold hover:bg-green-700 transition hidden">Download
+                Filtered CSV</a>
+        </div>
+
+        <!-- Status/Alert Message -->
+        <div id="statusMessage" class="mt-6 text-center text-red-600 hidden"></div>
+    </div>
+
+    <script>
+        document.getElementById('filterBtn').addEventListener('click', () => {
+            const categoryInput = document.getElementById('categoryInput').value.trim();
+            const fileInput = document.getElementById('csvFile').files[0];
+
+            // Validate the inputs
+            if (!categoryInput || !fileInput) {
+                document.getElementById('statusMessage').textContent = 'Please provide both categories and a CSV file.';
+                document.getElementById('statusMessage').classList.remove('hidden');
+                return;
+            }
+
+            // Parse and clean up the categories from input (handles both quoted and unquoted formats)
+            let chosenCategories = categoryInput.split(',').map(cat => cat.replace(/["']/g, '').trim());
+
+            if (chosenCategories.length === 0) {
+                document.getElementById('statusMessage').textContent = 'Error: Please provide at least one category.';
+                document.getElementById('statusMessage').classList.remove('hidden');
+                return;
+            }
+
+            // Read and filter the CSV file
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const csvData = event.target.result;
+                const filteredCsvData = filterCsv(csvData, chosenCategories);
+
+                // Create a downloadable CSV file
+                const blob = new Blob([filteredCsvData], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = url;
+                downloadLink.classList.remove('hidden');
+                document.getElementById('statusMessage').classList.add('hidden'); // Hide status message if it was visible
+            };
+
+            reader.readAsText(fileInput);
+        });
+
+        // Filter CSV based on categories
+        function filterCsv(csvData, chosenCategories) {
+            const rows = csvData.split('\n');
+            const headers = rows[0];
+            const filteredRows = [headers]; // Start with headers
+
+            // Iterate over CSV rows and filter based on category
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i].split(',');
+                const category = row[2]?.trim(); // Assuming category is in the 3rd column (index 2)
+                if (chosenCategories.includes(category)) {
+                    filteredRows.push(rows[i]); // Add matching row to the output
+                }
+            }
+
+            return filteredRows.join('\n'); // Return the filtered CSV data
+        }
+    </script>
+
+</body>
+
+</html>
