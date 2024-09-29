@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Maker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
+    <link rel="shortcut icon" href="https://i.ibb.co.com/5nD91wH/logo.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="global.css">
+    <style>
+        * {
+            font-family: "Poppins", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        .cke_notification {
+            display: none;
+        }
+
+        input:focus {
+            outline: none;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url('https://i.ibb.co.com/zPrykNY/bg.jpg');
+            background-position: center;
+            background-repeat: repeat;
+
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 p-6 font-sans">
+    <div
+        class=" border-blue-500 fixed bottom-5 right-5 p-3 rounded-md border flex justify-between items-center bg-white">
+        <a href="/">
+            <div class="flex gap-3 items-center">
+                <img src="https://i.ibb.co.com/7Kf4SJX/home.png" class="w-10 h-10 hover:scale-125 duration-300"
+                    alt="Leader ToolBox Logo">
+            </div>
+        </a>
+    </div>
+    <div class="max-w-4xl mx-auto bg-white p-6 border border-gray-400">
+        <h1 class="text-3xl font-semibold mb-6 text-gray-800  tracking-wide">Content Maker
+        </h1>
+        <p class="text-xs  mb-8">When you click the <span class="font-bold">"Generate Content"</span> button,
+            placeholders like <span class="text-green-500">[title1]</span>, <span
+                class="text-green-500">[title2]</span>,
+            <span class="text-green-500">[keyword]</span>, and <span class="text-green-500">[category]</span> in the
+            input
+            text will be replaced with the corresponding input values.
+        </p>
+
+        <!-- Input fields -->
+        <div class="grid grid-cols-2 gap-4 mb-6 border-b border-gray-300 pb-4">
+            <div class="flex flex-col">
+                <label class="block text-sm font-medium text-gray-700  tracking-wide">Title 1
+                    (optional)</label>
+                <input type="text" id="title1" placeholder="Enter Title 1" class="p-2 border border-gray-400 text-sm">
+            </div>
+            <div class="flex flex-col">
+                <label class="block text-sm font-medium text-gray-700  tracking-wide">Title 2
+                    (optional)</label>
+                <input type="text" id="title2" placeholder="Enter Title 2" class="p-2 border border-gray-400 text-sm">
+            </div>
+            <div class="flex flex-col">
+                <label class="block text-sm font-medium text-gray-700  tracking-wide">Keyword
+                    (optional)</label>
+                <input type="text" id="keyword" placeholder="Enter Keyword" class="p-2 border border-gray-400 text-sm">
+            </div>
+            <div class="flex flex-col">
+                <label class="block text-sm font-medium text-gray-700  tracking-wide">Category
+                    (optional)</label>
+                <input type="text" id="category" placeholder="Enter Category"
+                    class="p-2 border border-gray-400 text-sm">
+            </div>
+        </div>
+
+        <!-- Rich Text Editor for input -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700  tracking-wide mb-2">Content</label>
+            <textarea id="editor" rows="10" class="w-full border border-gray-400 text-sm"></textarea>
+        </div>
+
+        <!-- Generate Content Button -->
+        <button onclick="generateContent()"
+            class="w-full bg-gray-800 text-white  tracking-wider text-sm p-3 border border-gray-800">
+            Generate Content
+        </button>
+
+        <!-- Rich Text Editor for output -->
+        <div class="mt-6">
+            <label class="block text-sm font-medium text-gray-700  tracking-wide mb-2">Generated
+                Content</label>
+            <textarea id="outputEditor" rows="10" class="w-full border border-gray-400 text-sm"></textarea>
+        </div>
+    </div>
+
+    <script>
+        // Initialize CKEditor for both input and output
+        CKEDITOR.replace('editor');
+        CKEDITOR.replace('outputEditor');
+
+        // Load from localStorage on page load
+        window.onload = () => {
+            document.getElementById('title1').value = localStorage.getItem('title1') || '';
+            document.getElementById('title2').value = localStorage.getItem('title2') || '';
+            document.getElementById('keyword').value = localStorage.getItem('keyword') || '';
+            document.getElementById('category').value = localStorage.getItem('category') || '';
+
+            // Set editor content from localStorage
+            const savedContent = localStorage.getItem('content');
+            if (savedContent) {
+                CKEDITOR.instances.editor.setData(savedContent);
+            }
+
+            // Load output content from localStorage if available
+            const savedOutput = localStorage.getItem('outputContent');
+            if (savedOutput) {
+                CKEDITOR.instances.outputEditor.setData(savedOutput);
+            }
+        }
+
+        // Generate Content and Replace Variables
+        function generateContent() {
+            const title1 = document.getElementById('title1').value;
+            const title2 = document.getElementById('title2').value;
+            const keyword = document.getElementById('keyword').value;
+            const category = document.getElementById('category').value;
+
+            let content = CKEDITOR.instances.editor.getData();
+
+            // Replace placeholders with the corresponding values
+            content = content.replace(/\[title1\]/g, title1)
+                .replace(/\[title2\]/g, title2)
+                .replace(/\[keyword\]/g, keyword)
+                .replace(/\[category\]/g, category);
+
+            // Store values in localStorage
+            localStorage.setItem('title1', title1);
+            localStorage.setItem('title2', title2);
+            localStorage.setItem('keyword', keyword);
+            localStorage.setItem('category', category);
+            localStorage.setItem('content', CKEDITOR.instances.editor.getData());
+
+            // Set the formatted content in the output editor
+            CKEDITOR.instances.outputEditor.setData(content);
+
+            // Store generated content in localStorage
+            localStorage.setItem('outputContent', content);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Link Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="shortcut icon" href="https://i.ibb.co.com/5nD91wH/logo.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="global.css">
+    <!-- Google Fonts for better typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700&display=swap');
+
+    * {
+        font-family: "Poppins", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-image: url('https://i.ibb.co.com/zPrykNY/bg.jpg');
+        background-position: center;
+        background-repeat: repeat;
+    }
+
+    #toast {
+        position: fixed;
+        bottom: 10px;
+        left: 0px;
+        right: 0px;
+        margin: 0px auto;
+        max-width: max-content;
+        background-color: rgb(219, 251, 10);
+        color: black;
+        padding: 10px 20px;
+        border-radius: 5px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        z-index: 1000;
+    }
+
+    #toast.show {
+        opacity: 1;
+    }
+</style>
+
+<body class="bg-gray-100 font-poppins flex items-center justify-center min-h-screen">
+    <div
+        class="fixed bottom-5 right-5 border-blue-500 p-3 rounded-md border flex justify-between items-center bg-white">
+        <a href="/">
+            <div class="flex gap-3 items-center">
+                <img src="https://i.ibb.co.com/7Kf4SJX/home.png" class="w-10 h-10 hover:scale-125 duration-300"
+                    alt="Leader ToolBox Logo">
+            </div>
+        </a>
+    </div>
+    <!-- Main Container -->
+    <div class="bg-white p-8 border max-w-2xl w-full shadow-lg rounded-md">
+        <!-- Title -->
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Map Link Generator</h1>
+
+        <!-- Keyword Input -->
+        <div class="mb-4">
+            <label for="keyword" class="block text-sm font-medium text-gray-700">Enter Keywords
+                (comma-separated)</label>
+            <textarea id="keyword" rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <!-- Location Input -->
+        <div class="mb-4">
+            <label for="location" class="block text-sm font-medium text-gray-700">Enter Locations
+                (comma-separated)</label>
+            <textarea id="location" rows="3"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-between mb-4">
+            <button id="generateBtn"
+                class="bg-blue-600 text-white px-6 py-2 rounded-md font-bold hover:bg-blue-700 transition">Generate
+                Links</button>
+            <button id="clearBtn"
+                class="bg-red-500 text-white px-6 py-2 rounded-md font-bold hover:bg-red-600 transition">Clear
+                Links</button>
+            <button id="exportBtn"
+                class="bg-green-500 hidden text-white px-6 py-2 rounded-md font-bold hover:bg-green-600 transition">Export
+                CSV</button>
+        </div>
+
+        <!-- Output Links Section -->
+        <div id="result" class="mt-4">
+            <div id="linksContainer" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">Link copied to clipboard!</div>
+
+    <script>
+        document.getElementById('generateBtn').addEventListener('click', generateLinks);
+        document.getElementById('clearBtn').addEventListener('click', clearLinks);
+        document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+
+        window.onload = function () {
+            loadLinksFromLocalStorage();
+            document.getElementById('keyword').value = localStorage.getItem('keywords') || '';
+            document.getElementById('location').value = localStorage.getItem('locations') || '';
+        };
+
+        function generateLinks() {
+            const keywordInput = document.getElementById('keyword').value.trim();
+            const locationInput = document.getElementById('location').value.trim();
+
+            if (!keywordInput || !locationInput) {
+                alert('Please enter both keywords and locations.');
+                return;
+            }
+
+            localStorage.setItem('keywords', keywordInput);
+            localStorage.setItem('locations', locationInput);
+
+            const keywords = keywordInput.split(',').map(k => k.trim().replace(/ /g, '+'));
+            const locations = locationInput.split(',').map(l => l.trim().replace(/ /g, '+'));
+            const lat = 14.1576412;
+            const lon = -16.7424939;
+            const zoom = 3;
+
+            const linksContainer = document.getElementById('linksContainer');
+            linksContainer.innerHTML = ''; // Clear previous links
+
+            let links = [];
+
+            keywords.forEach(keyword => {
+                locations.forEach(location => {
+                    const searchLink = `https://www.google.com/maps/search/${keyword}+in+${location}/@${lat},${lon},${zoom}z?entry=ttu&g_ep=EgoyMDI0MDkyNS4wIKXMDSoASAFQAw%3D%3D`;
+                    const linkHTML = `
+                        <div class="flex border justify-between items-center bg-gray-100 p-3 rounded-md overflow-x-auto">
+                            <div class='overflow-x-hidden'>
+                            <a href="${searchLink}" target="_blank" class="text-blue-500 underline whitespace-nowrap link-item">${searchLink}</a>
+                            </div>
+                            <button class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 ml-2"
+                                onclick="copyToClipboard('${searchLink}', this)">Copy</button>
+                        </div>`;
+                    linksContainer.innerHTML += linkHTML;
+                    links.push(searchLink);
+                });
+            });
+
+            localStorage.setItem('generatedLinks', JSON.stringify(links));
+        }
+
+        function loadLinksFromLocalStorage() {
+            const storedLinks = JSON.parse(localStorage.getItem('generatedLinks'));
+            const linksContainer = document.getElementById('linksContainer');
+
+            if (storedLinks && storedLinks.length > 0) {
+                storedLinks.forEach(link => {
+                    const linkHTML = `
+                        <div class="flex border justify-between items-center bg-gray-100 p-3 rounded-md">
+                          <div class="overflow-x-hidden">
+                              <a href="${link}" target="_blank" class="text-blue-500 underline whitespace-nowrap link-item">${link}</a>
+                            </div>
+                            <button class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 ml-2"
+                                onclick="copyToClipboard('${link}', this)">Copy</button>
+                        </div>`;
+                    linksContainer.innerHTML += linkHTML;
+                });
+            }
+        }
+
+        function clearLinks() {
+            document.getElementById('linksContainer').innerHTML = ''; // Clear only the links
+            localStorage.removeItem('generatedLinks'); // Clear links from localStorage
+        }
+
+        function copyToClipboard(link, button) {
+            navigator.clipboard.writeText(link).then(() => {
+                const linkElement = button.previousElementSibling;
+                linkElement.classList.add('line-through', 'text-gray-500'); // Apply strikethrough and color change
+                updateCopiedLinks(link); // Save the copied state to localStorage
+                showToast();
+            });
+        }
+
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000); // Toast will disappear after 3 seconds
+        }
+        function updateCopiedLinks(link) {
+            let copiedLinks = JSON.parse(localStorage.getItem('copiedLinks')) || [];
+            if (!copiedLinks.includes(link)) {
+                copiedLinks.push(link);
+            }
+            localStorage.setItem('copiedLinks', JSON.stringify(copiedLinks));
+        }
+
+        function loadLinksFromLocalStorage() {
+            const storedLinks = JSON.parse(localStorage.getItem('generatedLinks'));
+            const copiedLinks = JSON.parse(localStorage.getItem('copiedLinks')) || [];
+            const linksContainer = document.getElementById('linksContainer');
+
+            if (storedLinks && storedLinks.length > 0) {
+                storedLinks.forEach(link => {
+                    const isCopied = copiedLinks.includes(link);
+                    const linkHTML = `
+                <div class="flex border justify-between items-center bg-gray-100 p-3 rounded-md">
+                    <div class='overflow-x-hidden'>
+                    <a href="${link}" target="_blank" class="text-blue-500 underline whitespace-nowrap link-item ${isCopied ? 'line-through text-gray-500' : ''}">${link}</a>
+                    </div>
+                    <button class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 ml-2"
+                        onclick="copyToClipboard('${link}', this)">Copy</button>
+                </div>`;
+                    linksContainer.innerHTML += linkHTML;
+                });
+            }
+        }
+        function clearLinks() {
+            document.getElementById('linksContainer').innerHTML = ''; // Clear links
+            localStorage.removeItem('generatedLinks'); // Clear generated links
+            localStorage.removeItem('copiedLinks'); // Clear copied links
+        }
+
+
+
+        function exportToCSV() {
+            const links = JSON.parse(localStorage.getItem('generatedLinks')) || [];
+            if (links.length === 0) {
+                alert("No links available to export.");
+                return;
+            }
+            link.click();
+        }
+    </script>
+</body>
+
+</html>
