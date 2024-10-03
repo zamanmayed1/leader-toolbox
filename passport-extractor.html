@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passport OCR Data Extractor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-lg">
+        <h2 class="text-2xl font-bold mb-4 text-center">Passport OCR Data Extractor</h2>
+        <input type="file" id="passportImage" class="w-full mb-4 p-2 border border-gray-300 rounded-lg"
+            accept="image/*">
+        <button onclick="startOCR()" class="w-full bg-blue-500 text-white p-2 rounded-lg">Extract Data</button>
+        <div id="progressBar" class="w-full bg-gray-200 h-2 mt-4">
+            <div id="progress" class="bg-blue-500 h-2 w-0"></div>
+        </div>
+        <pre id="result" class="mt-4 bg-gray-50 p-4 border border-gray-200 rounded-lg text-sm"></pre>
+    </div>
+
+    <script>
+        function startOCR() {
+            const input = document.getElementById('passportImage');
+            const file = input.files[0];
+            if (!file) {
+                alert('Please upload an image of the passport.');
+                return;
+            }
+
+            document.getElementById("progress").style.width = '0%';
+            simulateProgress();
+
+            // Initialize OCR processing
+            Tesseract.recognize(file, 'eng', {
+                logger: info => {
+                    console.log(info);
+                }
+            }).then(({ data: { text } }) => {
+                const extractedData = extractData(text);
+                document.getElementById('result').textContent = JSON.stringify(extractedData, null, 4);
+            });
+        }
+
+        // Simulates the progress bar filling up gradually
+        function simulateProgress() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress >= 100) {
+                    clearInterval(interval);
+                } else {
+                    progress += 5; // Increment progress by 5%
+                    document.getElementById("progress").style.width = progress + '%';
+                }
+            }, 150); // Adjust this for the speed of the progress bar
+        }
+
+        // Clean the raw OCR text to fix common misreads and improve data extraction
+        function cleanText(text) {
+            return text
+                .replace(/Mottier's/g, "Mother's")   // Correct OCR misread for Mother's
+                .replace(/TolephoneNo/g, "Telephone No")  // Correct OCR misread for Telephone No
+                .replace(/Emorgency/g, "Emergency")  // Correct OCR misread for Emergency
+                .replace(/[=_\-]+/g, '')  // Remove unwanted characters like '=', '-', '_'
+                .replace(/\s{2,}/g, ' ')  // Replace multiple spaces with a single space
+                .trim();  // Trim the cleaned text
+        }
+
+        // Extract the relevant data using regular expressions
+        function extractData(text) {
+            text = cleanText(text);
+
+            const extracted = {
+                "Name": matchPattern(text, /Name:\s*([A-Z\s]+)/i),
+                "Father's Name": matchPattern(text, /Father's Name:\s*([A-Z\s]+)/i),
+                "Mother's Name": matchPattern(text, /Mother's Name:\s*([A-Z\s]+)/i),
+                "Spouse's Name": matchPattern(text, /Spouse's Name:\s*([A-Z\s]*)/i),
+                "Permanent Address": matchPattern(text, /Permanent address:\s*([A-Z0-9,\s\-]+)/i),
+                "Emergency Contact": {
+                    "Name": matchPattern(text, /Emergency Contact:\s*Name:\s*([A-Z\s]+)/i),
+                    "Relationship": matchPattern(text, /Relationship:\s*([A-Z\s]+)/i),
+                    "Address": matchPattern(text, /address:\s*([A-Z0-9,\s\-]+)/i),
+                    "Telephone Number": matchPattern(text, /Telephone No:\s*([+0-9]+)/i)
+                },
+                "Surname": matchPattern(text, /Surname:\s*([A-Z]+)/i),
+                "Given Name": matchPattern(text, /Given Name:\s*([A-Z\s]+)/i),
+                "Nationality": matchPattern(text, /Nationality:\s*([A-Z]+)/i),
+                "Personal No": matchPattern(text, /Personal No:\s*([A-Z0-9]+)/i),
+                "Date of Birth": matchPattern(text, /Date of Birth:\s*([0-9\-]+)/i),
+                "Place of Birth": matchPattern(text, /Place of Birth:\s*([A-Z\s]+)/i),
+                "Date of Issue": matchPattern(text, /Date of Issue:\s*([0-9\-]+)/i),
+                "Date of Expiry": matchPattern(text, /Date of Expiry:\s*([0-9\-]+)/i),
+                "Passport No": matchPattern(text, /Passport No:\s*([A-Z0-9]+)/i)
+            };
+
+            return extracted;
+        }
+
+        // Helper function to extract data using regex
+        function matchPattern(text, pattern) {
+            const match = text.match(pattern);
+            return match ? match[1].trim() : "Not found";
+        }
+    </script>
+</body>
+
+</html>
